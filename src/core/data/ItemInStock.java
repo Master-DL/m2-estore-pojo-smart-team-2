@@ -1,5 +1,6 @@
 package core.data;
 
+import core.services.IProvider;
 import core.services.Provider;
 
 public class ItemInStock {
@@ -17,13 +18,13 @@ public class ItemInStock {
     private Object item;
     private int quantity;
     private double price;
-    private Provider provider;
+    private IProvider provider;
 
     private ItemInStock() {
         num = numItems++;
     }
 
-    public ItemInStock(Object item, int quantity, double price, Provider provider) {
+    public ItemInStock(Object item, int quantity, double price, IProvider provider) {
         this();
         this.item = item;
         this.quantity = quantity;

@@ -15,7 +15,7 @@ import java.util.Set;
 
 public class Store {
 
-    private Provider provider;
+    private IProvider provider;
     private Bank bank;
 
     /**
