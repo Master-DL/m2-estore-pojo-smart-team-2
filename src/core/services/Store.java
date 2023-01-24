@@ -16,12 +16,12 @@ import java.util.Set;
 public class Store {
 
     private IProvider provider;
-    private Bank bank;
+    private IBank bank;
 
     /**
      * Constructs a new StoreImpl
      */
-    public Store(Provider prov, Bank bk) {
+    public Store(IProvider prov, IBank bk) {
         provider = prov;
         bank = bk;
     }
