@@ -3,10 +3,9 @@ package core.services;
 import core.data.Cart;
 import core.data.ItemInStock;
 import core.data.Order;
-import estorePojo.exceptions.InsufficientBalanceException;
-import estorePojo.exceptions.InvalidCartException;
-import estorePojo.exceptions.UnknownAccountException;
-import estorePojo.exceptions.UnknownItemException;
+import core.interfaces.IBank;
+import core.interfaces.IProvider;
+import estorePojo.exceptions.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +16,22 @@ public class Store {
 
     private IProvider provider;
     private IBank bank;
+
+
+    /**
+     * A map of emitted orders.
+     * keys = order keys as Integers
+     * values = Order instances
+     */
+    private Map<Integer, Order> orders = new HashMap<>();
+
+    /**
+     * A map of items available in the stock of the store.
+     * keys = the references of the items as Objects
+     * values = ItemInStock instances
+     */
+    private Map<Object, ItemInStock> itemsInStock = new HashMap<>();
+
 
     /**
      * Constructs a new StoreImpl
@@ -29,7 +44,7 @@ public class Store {
     /**
      * @param item a given item
      * @return the price of a given item
-     * @throws UnknownItemException
+     * @throws UnknownItemException if the item is not delivered by the provider
      */
     public double getPrice(Object item) throws UnknownItemException {
         return provider.getPrice(item);
@@ -46,14 +61,11 @@ public class Store {
             throws UnknownItemException {
 
         if (!itemsInStock.containsKey(item))
-            throw new UnknownItemException(
-                    "Item " + item +
-                            " does not correspond to any known reference");
+            throw new UnknownItemException("Item " + item + " does not correspond to any known reference");
 
-        ItemInStock iis = (ItemInStock) itemsInStock.get(item);
-        boolean isAvailable = (iis.getQuantity() >= qty);
+        ItemInStock iis = itemsInStock.get(item);
 
-        return isAvailable;
+        return (iis.getQuantity() >= qty);
     }
 
     /**
@@ -67,7 +79,7 @@ public class Store {
      * @param qty
      * @return Implementation dependant.
      * Either a new cart at each call or the same cart updated.
-     * @throws UnknownItemException
+     * @throws UnknownItemException        if the item is not delivered by the provider
      * @throws MismatchClientCartException if the given client does not own the given cart
      */
     public Cart addItemToCart(
@@ -75,16 +87,19 @@ public class Store {
             Client client,
             Object item,
             int qty)
-            throws UnknownItemException, InvalidCartException {
+            throws UnknownItemException, InvalidCartException, MismatchClientCartException {
 
         if (cart == null) {
             // If no cart is provided, create a new one
             cart = new Cart(client);
         } else {
             if (client != cart.getClient())
-                throw new InvalidCartException(
-                        "Cart " + cart + " does not belong to " + client);
+                throw new MismatchClientCartException("Cart " + cart + " does not belong to " + client);
         }
+        double price = getPrice(item);
+
+        if (!isAvailable(item, qty) || price < 0)
+            throw new UnknownItemException("Item " + item + " is not an item delivered by this provider.");
 
         cart.addItem(item, qty);
 
@@ -99,7 +114,7 @@ public class Store {
      * @param address
      * @param bankAccountRef
      * @return the order
-     * @throws UnknownItemException
+     * @throws UnknownItemException if the item is not delivered by the provider
      */
     public Order pay(Cart cart, String address, String bankAccountRef)
             throws
@@ -118,33 +133,19 @@ public class Store {
         for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Map.Entry) iter.next();
             Object item = entry.getKey();
-            int qty = ((Integer) entry.getValue()).intValue();
+            int qty = (Integer) entry.getValue();
 
             treatOrder(order, item, qty);
         }
         double amount = order.computeAmount();
 
         // Make the payment
-        // Throws InsuffisiantBalanceException if the client account is
+        // Throws InsufficientBalanceException if the client account is
         // not sufficiently balanced
         bank.transfert(bankAccountRef, toString(), amount);
 
         return order;
     }
-
-    /**
-     * A map of emitted orders.
-     * keys = order keys as Integers
-     * values = Order instances
-     */
-    private Map<Integer, Order> orders = new HashMap<>();
-
-    /**
-     * A map of items available in the stock of the store.
-     * keys = the references of the items as Objects
-     * values = ItemInStock instances
-     */
-    private Map<Object, ItemInStock> itemsInStock = new HashMap<>();
 
     /**
      * Used by a client to order an item.
@@ -158,7 +159,7 @@ public class Store {
      * @param address
      * @param bankAccountRef
      * @return the order
-     * @throws UnknownItemException
+     * @throws UnknownItemException         if the item is not delivered by the provider
      * @throws InsufficientBalanceException
      * @throws UnknownAccountException
      */
@@ -182,7 +183,7 @@ public class Store {
         double amount = order.computeAmount();
 
         // Make the payment
-        // Throws InsuffisiantBalanceException if the client account is
+        // Throws InsufficientBalanceException if the client account is
         // not sufficiently balanced
         bank.transfert(bankAccountRef, toString(), amount);
 
@@ -196,7 +197,7 @@ public class Store {
      * @param item
      * @param qty
      * @return
-     * @throws UnknownItemException
+     * @throws UnknownItemException         if the item is not delivered by the provider
      * @throws InsufficientBalanceException
      * @throws UnknownAccountException
      */
@@ -220,7 +221,7 @@ public class Store {
 
         // Check whether the item is available in the stock
         // If not, place an order for it to the provider
-        ItemInStock iis = (ItemInStock) itemsInStock.get(item);
+        ItemInStock iis = itemsInStock.get(item);
         if (iis == null) {
             int quantity = qty + more;
             delay += provider.order(this, item, quantity);

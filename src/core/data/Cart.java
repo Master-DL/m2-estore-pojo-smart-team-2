@@ -27,7 +27,7 @@ public class Cart {
         if (items.containsKey(item)) {
             // The item has already been put in the cart
             // Increase the number
-            oldQty = ((Integer) items.get(item)).intValue();
+            oldQty = items.get(item);
         }
         items.put(item, qty + oldQty);
     }

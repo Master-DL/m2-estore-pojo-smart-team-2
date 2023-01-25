@@ -2,10 +2,7 @@ package core.services;
 
 import core.data.Cart;
 import core.data.Order;
-import estorePojo.exceptions.InsufficientBalanceException;
-import estorePojo.exceptions.InvalidCartException;
-import estorePojo.exceptions.UnknownAccountException;
-import estorePojo.exceptions.UnknownItemException;
+import estorePojo.exceptions.*;
 
 public class Client implements Runnable {
 
@@ -72,7 +69,7 @@ public class Client implements Runnable {
             String[] items, int[] qties, String address, String account)
             throws
             InsufficientBalanceException, UnknownAccountException,
-            UnknownItemException, InvalidCartException {
+            UnknownItemException, InvalidCartException, MismatchClientCartException {
 
         System.out.println("Ordering for " + account + "...");
         Cart cart = null;

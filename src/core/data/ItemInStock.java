@@ -1,6 +1,6 @@
 package core.data;
 
-import core.services.IProvider;
+import core.interfaces.IProvider;
 
 public class ItemInStock {
 

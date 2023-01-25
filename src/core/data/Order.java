@@ -65,12 +65,12 @@ public class Order {
      * @param item
      * @param qty
      * @param price
-     * @throws UnknownItemException
+     * @throws UnknownItemException if the item is not delivered by the provider
      */
     public void addItem(Object item, int qty, double price) throws UnknownItemException {
 
         if (itemPrices.containsKey(item)) {
-            double oldPrice = ((Double) itemPrices.get(item)).doubleValue();
+            double oldPrice = itemPrices.get(item);
             if (oldPrice != price)
                 throw new UnknownItemException(
                         "Item " + item + " price (" + price + ") added to cart is different from the price (" + oldPrice
@@ -82,7 +82,7 @@ public class Order {
 
         int newQty = qty;
         if (itemQuantities.containsKey(item)) {
-            newQty += ((Integer) itemQuantities.get(item)).intValue();
+            newQty += itemQuantities.get(item);
         }
         itemQuantities.put(item, newQty);
     }
@@ -95,8 +95,8 @@ public class Order {
         double amount = 0;
 
         for (Object item : items) {
-            int qty = ((Integer) itemQuantities.get(item)).intValue();
-            double price = ((Double) itemPrices.get(item)).doubleValue();
+            int qty = itemQuantities.get(item);
+            double price = itemPrices.get(item);
             amount += qty * price;
         }
 
