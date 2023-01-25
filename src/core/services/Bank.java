@@ -4,7 +4,7 @@ import core.data.Account;
 import estorePojo.exceptions.InsufficientBalanceException;
 import estorePojo.exceptions.UnknownAccountException;
 
-public class Bank {
+public class Bank implements IBank {
 
     private Account estore;
     private Account anne, bob;

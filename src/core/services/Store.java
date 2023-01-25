@@ -15,13 +15,13 @@ import java.util.Set;
 
 public class Store {
 
-    private Provider provider;
-    private Bank bank;
+    private IProvider provider;
+    private IBank bank;
 
     /**
      * Constructs a new StoreImpl
      */
-    public Store(Provider prov, Bank bk) {
+    public Store(IProvider prov, IBank bk) {
         provider = prov;
         bank = bk;
     }
